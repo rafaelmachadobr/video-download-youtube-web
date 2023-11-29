@@ -1,8 +1,9 @@
+from io import BytesIO
 from typing import Dict, Optional
 
 from fastapi import HTTPException
 from pytube import YouTube
-from pytube.exceptions import VideoUnavailable, AgeRestrictedError, VideoPrivate
+from pytube.exceptions import VideoUnavailable
 
 YOUTUBE_BASE_URL: str = "https://www.youtube.com/watch?v="
 
@@ -33,7 +34,7 @@ def get_video_info(url: str) -> Dict[str, str]:
     """
     yt = YouTube(url)
     return {
-        "title": yt.title,
+        "title": yt.title.encode('utf-8').decode('latin-1'),
         "thumbnail": yt.thumbnail_url,
         "author": yt.author,
         "length": yt.length,
@@ -56,3 +57,34 @@ def handle_exceptions(exception: Exception) -> Optional[HTTPException]:
         return HTTPException(status_code=404, detail=f"Vídeo não encontrado: {str(exception)}")
     else:
         return HTTPException(status_code=500, detail=f"Erro ao obter informações do vídeo: {str(exception)}")
+
+
+def download_video_logic(video_url: str, video_format: str):
+    """
+    Download do vídeo do YouTube
+
+    Parameters:
+    - video_url (str): A URL do vídeo do YouTube.
+    - video_format (str): O formato do vídeo a ser baixado. Pode ser "mp3" ou "mp4".
+
+    Returns:
+    - Tuple[bytes, str]: uma tupla contendo o conteúdo do vídeo e a extensão do arquivo.
+    """
+    yt = YouTube(video_url)
+
+    if video_format == "mp3":
+        stream = yt.streams.get_audio_only()
+        file_extension = "mp3"
+    else:
+        stream = yt.streams.get_highest_resolution()
+        file_extension = "mp4"
+
+    buffer = BytesIO()
+    stream.stream_to_buffer(buffer=buffer)
+
+    if not buffer.getvalue():
+        raise HTTPException(
+            status_code=500, detail="Erro ao obter o conteúdo do vídeo.")
+
+    content = buffer.getvalue()
+    return content, file_extension
