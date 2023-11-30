@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaArrowRight, FaDownload, FaPlay } from "react-icons/fa";
 import { MdContentPaste } from "react-icons/md";
+import { toast } from "react-toastify";
 import Logo from "./assets/logo.jpeg";
 import { api } from "./services/api";
 import { Video } from "./types/Video";
@@ -21,14 +22,14 @@ export default function App() {
 
       const response = await api.get<Video>(`/api/video/info/${videoId}`);
       setVideoInfo(response.data);
-      alert("Vídeo encontrado com sucesso!");
+      toast.success("Vídeo encontrado com sucesso!");
     } catch (error: any) {
       if (error.response && error.response.status === 500) {
-        alert(
+        toast.error(
           "Ocorreu um erro ao tentar encontrar o vídeo. Verifique se o link está correto."
         );
       } else {
-        alert("Ocorreu um erro ao tentar encontrar o vídeo.");
+        toast.error("Ocorreu um erro ao tentar encontrar o vídeo.");
       }
     } finally {
       setLoading(false);
@@ -37,7 +38,7 @@ export default function App() {
 
   const handleDownload = async () => {
     if (!videoInfo) {
-      alert("Por favor, primeiro encontre e selecione um vídeo.");
+      toast.info("Por favor, primeiro encontre e selecione um vídeo.");
       return;
     }
 
@@ -55,14 +56,14 @@ export default function App() {
       a.href = url;
       a.download = `${videoInfo.title}.${format}`;
       a.click();
+      toast.success("Vídeo baixado com sucesso!");
     } catch (error) {
-      alert("Ocorreu um erro ao tentar baixar o vídeo.");
+      toast.error("Ocorreu um erro ao tentar baixar o vídeo.");
     } finally {
+      setVideoInfo(null);
+      setVideoLink("");
       setLoading(false);
     }
-
-    setVideoInfo(null);
-    setVideoLink("");
   };
 
   if (loading)
