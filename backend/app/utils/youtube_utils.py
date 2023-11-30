@@ -38,6 +38,7 @@ def get_video_info(url: str) -> Dict[str, str]:
         "thumbnail": yt.thumbnail_url,
         "author": yt.author,
         "length": yt.length,
+        "url": yt.watch_url,
     }
 
 
